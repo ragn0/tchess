@@ -1,10 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include "tchess.h"
+#include <stdlib.h>
 
-int main() {
-	chessboard_t chessboard;
-	init_chessboard(&chessboard);
-	print_chessboard(&chessboard);
-	return EXIT_SUCCESS;
+int main(){
+	Position *pos = malloc(sizeof(Position));
+	init_position(pos);
+	for (int i = 0; i < NUM_SQUARES; i++) {
+		printf("%d ", pos->board[i]);
+	}
 }
