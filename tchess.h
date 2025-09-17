@@ -39,7 +39,7 @@ enum {
 typedef struct {
 	Square from; // 0-63 for squares a1-h8
 	Square to; // 0-63 for squares a1-h8
-	MoveType type; 
+	MoveType type;
 	char promotionPiece; // 'q', 'r', 'b', 'n' for promotion moves, '0' otherwise
 } Move;
 
@@ -74,6 +74,21 @@ typedef enum {
 	BLACK_QUEEN,
 	BLACK_KING,
 } Piece;
+
+// Chessboard as 1D array of pieces
+typedef struct {
+    Piece board[NUM_SQUARES];
+    Color side_to_move;
+	int8_t castling_rights; // bitmask: 0bKQkq (1 for available, 0 for unavailable)
+    Square en_passant_target;   // NO_SQUARE if none
+    int    halfmove_clock;
+    int    fullmove_number;
+} Position;
+
+// Auxiliary functions
+char piece_to_char(Piece piece);
+char* square_to_string(int square);
+
 // Get color
 static inline Color piece_color(Piece piece) {
 	if (piece == NO_PIECE) {
@@ -89,21 +104,39 @@ static inline PieceType piece_type(Piece piece) {
 	return (PieceType)(piece % 6);
 }
 
-// Chessboard as 1D array of pieces
-typedef struct {
-    Piece board[NUM_SQUARES];
-    Color side_to_move;
-	int8_t castling_rights; // bitmask: 0bKQkq (1 for available, 0 for unavailable)
-    Square en_passant_target;   // NO_SQUARE if none
-    int    halfmove_clock;
-    int    fullmove_number;
-} Position;
+static inline int file_of(Square s){ return s % NUM_FILES; } // 0..7
+static inline int rank_of(Square s){ return s / NUM_FILES; } // 0..7
+static inline bool in_board(int f, int r){ return (unsigned)f < NUM_FILES && (unsigned)r < NUM_RANKS; } // true if on board
+static inline Square sq_of(int f,int r){ return (Square)(r*NUM_FILES + f); }
+static inline Piece at(const Position* pos, Square s){ return pos->board[s]; }
+
+static inline Piece promo_to_piece(Color us, char promoChar){
+    if (us == WHITE){
+        switch(promoChar){ case 'q': return WHITE_QUEEN; case 'r': return WHITE_ROOK;
+                           case 'b': return WHITE_BISHOP; case 'n': return WHITE_KNIGHT; default: return WHITE_QUEEN; }
+    } else {
+        switch(promoChar){ case 'q': return BLACK_QUEEN; case 'r': return BLACK_ROOK;
+                           case 'b': return BLACK_BISHOP; case 'n': return BLACK_KNIGHT; default: return BLACK_QUEEN; }
+    }
+}
+
+// Move list
+typedef struct { Move list[256]; int count; } MoveList;
+
+static inline void add_move(MoveList* ml, Move m){
+    ml->list[ml->count++] = m;
+}
+
+
 
 // FUNCTION PROTOTYPES
-void init_position(Position *pos);
-bool parse_fen(const char *fen, Position *pos);
-char* position_to_fen(const Position *pos);
-void print_board(const Position *pos);
+void init_position(Position *pos); // Initialize the position to the starting position
+bool parse_fen(const char *fen, Position *pos); // TODO
+char* position_to_fen(const Position *pos); // TODO
+void print_board(const Position *pos); // Print the board with pieces
+void rotate_board(Position *pos); // Rotate the board 180 degrees
 
+Move* parse_move(const char *move_str); // Parse a move from a string
+int make_move(Position *pos, const Move *move); // Make a move on the board
 
 #endif // TCHESS_H
