@@ -1,3 +1,6 @@
+#ifndef DIRECTIONS_H
+#define DIRECTIONS_H
+
 static const int KN[8][2] = {
     {+1,+2},{+2,+1},{+2,-1},{+1,-2},{-1,-2},{-2,-1},{-2,+1},{-1,+2}
 };
@@ -6,3 +9,5 @@ static const int RDIR[4][2] = { {+1,0},{-1,0},{0,+1},{0,-1} };
 static const int QDIR[8][2] = {
     {+1,0},{-1,0},{0,+1},{0,-1},{+1,+1},{+1,-1},{-1,+1},{-1,-1}
 };
+
+#endif // DIRECTIONS_H

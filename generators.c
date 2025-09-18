@@ -1,6 +1,5 @@
-#include "generators.h"
 #include "directions.h"
-#include "tchess.h"
+#include "generators.h"
 
 // -- GENERATOR MOVES --
 
@@ -100,6 +99,7 @@ static void gen_knight(const Position *pos, Square sq, MoveList *list) {
 			}
 			else if (target != NO_PIECE && piece_color(target) != c) {
 				Move m = {sq, sq_to, CAPTURE, NO_PIECE};
+				add_move(list, m);
 			}
 		}
 	}

@@ -10,7 +10,7 @@
 
 // TYPEDEFS
 typedef int16_t Square;
-#define SQ(file, rank) ((Square)((rank) * NUM_FILES + (file)))
+#define SQ(file, rank) (Square)((7 - rank) * NUM_RANKS + file)
 
 // Move types
 typedef enum { NORMAL=0, CAPTURE, EN_PASSANT, CASTLING_KINGSIDE, CASTLING_QUEENSIDE, PROMOTION } MoveType;
@@ -87,7 +87,7 @@ typedef struct {
 
 // Auxiliary functions
 char piece_to_char(Piece piece);
-char* square_to_string(int square);
+char* square_to_string(Square square);
 
 // Get color
 static inline Color piece_color(Piece piece) {
@@ -105,7 +105,7 @@ static inline PieceType piece_type(Piece piece) {
 }
 
 static inline int file_of(Square s){ return s % NUM_FILES; } // 0..7
-static inline int rank_of(Square s){ return s / NUM_FILES; } // 0..7
+static inline int rank_of(Square s){ return -((s - file_of(s)) / NUM_FILES) + 7; } // 0..7
 static inline bool in_board(int f, int r){ return (unsigned)f < NUM_FILES && (unsigned)r < NUM_RANKS; } // true if on board
 static inline Square sq_of(int f,int r){ return (Square)(r*NUM_FILES + f); }
 static inline Piece at(const Position* pos, Square s){ return pos->board[s]; }
@@ -134,7 +134,6 @@ void init_position(Position *pos); // Initialize the position to the starting po
 bool parse_fen(const char *fen, Position *pos); // TODO
 char* position_to_fen(const Position *pos); // TODO
 void print_board(const Position *pos); // Print the board with pieces
-void rotate_board(Position *pos); // Rotate the board 180 degrees
 
 Move* parse_move(const char *move_str); // Parse a move from a string
 int make_move(Position *pos, const Move *move); // Make a move on the board

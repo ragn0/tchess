@@ -18,19 +18,19 @@ void init_position(Position *pos){
 		for (int j = 0; j < 8; j++) {
 			pos->board[i*8 + j] = NO_PIECE;
 			if (i == 1 || i == 6) {
-				pos->board[i*8 + j] = (i == 1) ? WHITE_PAWN : BLACK_PAWN;
+				pos->board[i*8 + j] = (i == 1) ? BLACK_PAWN : WHITE_PAWN;
 			}
 			else if (i == 0 || i == 7) {
 				if (j == 0 || j == 7) {
-					pos->board[i*8 + j] = (i == 0) ? WHITE_ROOK : BLACK_ROOK;
+					pos->board[i*8 + j] = (i == 0) ? BLACK_ROOK : WHITE_ROOK;
 				} else if (j == 1 || j == 6) {
-					pos->board[i*8 + j] = (i == 0) ? WHITE_KNIGHT : BLACK_KNIGHT;
+					pos->board[i*8 + j] = (i == 0) ? BLACK_KNIGHT : WHITE_KNIGHT;
 				} else if (j == 2 || j == 5) {
-					pos->board[i*8 + j] = (i == 0) ? WHITE_BISHOP : BLACK_BISHOP;
+					pos->board[i*8 + j] = (i == 0) ? BLACK_BISHOP : WHITE_BISHOP;
 				} else if (j == 3) {
-					pos->board[i*8 + j] = (i == 0) ? WHITE_QUEEN : BLACK_QUEEN;
+					pos->board[i*8 + j] = (i == 0) ? BLACK_QUEEN : WHITE_QUEEN;
 				} else if (j == 4) {
-					pos->board[i*8 + j] = (i == 0) ? WHITE_KING : BLACK_KING;
+					pos->board[i*8 + j] = (i == 0) ? BLACK_KING : WHITE_KING;
 				}
 			}
 		}
@@ -38,14 +38,14 @@ void init_position(Position *pos){
 }
 
 // Auxiliary function to convert square index to string (e.g., 0 -> "a1")
-char* square_to_string(int square) {
+char* square_to_string(Square square) {
 	char *buffer = malloc(3 * sizeof(char));
-	if (square < 0 || square >= NUM_SQUARES) {
+	if (square >= NUM_SQUARES) {
 		strcpy(buffer, "??");
 		return 0;
 	}
-	int file = square % 8;
-	int rank = square / 8;
+	int file = file_of(square);
+	int rank = rank_of(square);
 	buffer[0] = 'a' + file;
 	buffer[1] = '1' + rank;
 	buffer[2] = '\0';
@@ -75,7 +75,7 @@ char piece_to_char(Piece p) {
 void print_board(const Position *pos) {
     const int flipped = pos->side_to_move;
 
-    // intestazione colonne
+	// Column headers at the top
     printf("  ");
     if (!flipped) {
         for (int f = 0; f < 8; ++f) printf("  %c ", 'a' + f);
@@ -84,28 +84,38 @@ void print_board(const Position *pos) {
     }
     printf("\n");
 
-    // riga superiore di separatori
     printf("  +---+---+---+---+---+---+---+---+\n");
-
-    for (int row = 0; row < 8; ++row) {
-        // Etichetta riga a sinistra
+	if (!flipped) {
+    for (int row = 0; row < 8; row++) {
         int rank_label = !flipped ? (8 - row) : (1 + row);
         printf("%d |", rank_label);
 
-        for (int col = 0; col < 8; ++col) {
-            // Mappatura coordinate di *display* -> modello
-            // Assunzione: rank 0 in memoria = riga "8" (in alto), file 0 = 'a' (a sinistra).
+        for (int col = 0; col < 8; col++) {
+			// Assuming 0,0 is a8, 7,7 is h1
             Piece p = pos->board[SQ(col, row)];
             char c  = piece_to_char(p);
             printf(" %c |", c);
         }
-
-        // Etichetta riga a destra
         printf(" %d\n", rank_label);
-        printf("  +---+---+---+---+---+---+---+---+\n");
+		printf("  +---+---+---+---+---+---+---+---+\n");
     }
+	}
+	else {
+		for (int row = 7; row >= 0; row--) {
+			int rank_label = !flipped ? (8 - row) : (1 + row);
+			printf("%d |", rank_label);
 
-    // intestazione colonne in basso
+			for (int col = 7; col >= 0; col--) {
+				// Assuming 0,0 is a8, 7,7 is h1
+				Piece p = pos->board[SQ(col, row)];
+				char c  = piece_to_char(p);
+				printf(" %c |", c);
+			}
+			printf(" %d\n", rank_label);
+			printf("  +---+---+---+---+---+---+---+---+\n");
+			}
+	}
+	// Bottom column headers
     printf("  ");
     if (!flipped) {
         for (int f = 0; f < 8; ++f) printf("  %c ", 'a' + f);
@@ -113,15 +123,6 @@ void print_board(const Position *pos) {
         for (int f = 7; f >= 0; --f) printf("  %c ", 'a' + f);
     }
     printf("\n\n");
-}
-
-// Rotate the board
-void rotate_board(Position *pos) {
-	for (int i = 0; i < 32; i++) {
-		int temp = pos->board[i];
-		pos->board[i] = pos->board[NUM_SQUARES-1 - i];
-		pos->board[NUM_SQUARES-1 -i] = temp;
-	}
 }
 
 // Parse the move string
@@ -134,20 +135,20 @@ Move* parse_move(const char *move_str) {
 		free(move);
 		return NULL; // Invalid move string length
 	}
-	if (strlen(move_str) == 5) {
-		
+	if (strlen(move_str) == 5) {	
 		move->promotionPiece = move_str[4];
 	}
 	else {
 		move->promotionPiece = NO_PIECE;
 	}
-	move->from = SQ(move_str[0] - 'a', move_str[1] - '1');
-	move->to = SQ(move_str[2] - 'a', move_str[3] - '1');
-	if (move->from < 0 || move->from >= NUM_SQUARES || 
-		move->to < 0 || move->to >= NUM_SQUARES) {
+	move->from = SQ((int)(move_str[0] - 'a'), (int)(move_str[1] - '1'));
+	move->to = SQ((int)(move_str[2] - 'a'), (int)(move_str[3] - '1'));
+	if (move->from >= NUM_SQUARES || move->to >= NUM_SQUARES) {
+		printf("%d %d\n", move->from, move->to);
 		free(move);
 		return NULL; // Invalid square
 	}
+	move->type = NORMAL; // Default move type
 	return move;
 }
 
@@ -158,9 +159,9 @@ int make_move(Position *pos, const Move *move) {
     Piece  moving = pos->board[from];
     if (moving == NO_PIECE) return 0;
 
-    Color c_us = piece_color(moving);
-    Color c_them = (c_us == WHITE ? BLACK : WHITE);
-
+    Color c_us = pos->side_to_move;
+    Color c_them = !c_us;
+	if (piece_color(moving) != c_us) return 0;
     // default: no en passant target 
     pos->en_passant_target = NO_SQUARE;
 
