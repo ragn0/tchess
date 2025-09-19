@@ -106,7 +106,7 @@ static inline PieceType piece_type(Piece piece) {
 
 static inline int file_of(Square s){ return s % NUM_FILES; } // 0..7
 static inline int rank_of(Square s){ return -((s - file_of(s)) / NUM_FILES) + 7; } // 0..7
-static inline bool in_board(int f, int r){ return (unsigned)f < NUM_FILES && (unsigned)r < NUM_RANKS; } // true if on board
+static inline bool in_board(int f, int r){ return (f >= 0 ) && (f < NUM_FILES) && (r >= 0) && (r < NUM_RANKS); } // true if on board
 static inline Square sq_of(int f,int r){ return (Square)(r*NUM_FILES + f); }
 static inline Piece at(const Position* pos, Square s){ return pos->board[s]; }
 

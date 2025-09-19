@@ -1,5 +1,7 @@
 #include "directions.h"
+#include "tchess.h"
 #include "generators.h"
+#include <stdio.h>
 
 // -- GENERATOR MOVES --
 
@@ -11,11 +13,11 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 	int file = file_of(sq);
 	int rank = rank_of(sq);
 	// Forward moves 
-	int r1 = rank + 1;
+	int r1 = rank + 1 * ((c == WHITE) ? 1 : -1);
 	Square to = SQ(file, r1);
 	if (in_board(file, r1) && at(pos, to) == NO_PIECE){
 		// Normal move, check for promotion
-		if (r1 == 7) {
+		if (r1 == 7 || r1 == 0) {
 			// Promotions
 			char promos[] = {'q', 'r', 'b', 'n'};
 			for (int i = 0; i < 4; i++) {
@@ -26,8 +28,8 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 			Move m = {sq, to, NORMAL, NO_PIECE};
 			add_move(list, m);
 			// Double move from starting rank
-			if (rank == 1) {
-				int r2 = rank + 2;
+			if (rank == 1 || rank == 6) {
+				int r2 = rank + 2 * ((c == WHITE) ? 1 : -1);
 				Square to2 = SQ(file, r2);
 				if (at(pos, to2) == NO_PIECE) {
 					Move m2 = {sq, to2, NORMAL, NO_PIECE};
@@ -46,7 +48,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 
 		if (l_p != NO_PIECE && piece_color(l_p) != c) {
 			// Capture left, check for promotion
-			if (r1 == 7) {
+			if (r1 == 7 || r1 == 0) {
 				for (int i = 0; i < 4; i++) {
 					Move m = {sq, cap_left, PROMOTION, promos[i]};
 					add_move(list, m);
@@ -58,7 +60,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 		}
 		if (r_p != NO_PIECE && piece_color(r_p) != c) {
 			// Capture right, check for promotion
-			if (r1 == 7) {
+			if (r1 == 7 || r1 == 0) {
 				for (int i = 0; i < 4; i++) {
 					Move m = {sq, cap_left, PROMOTION, promos[i]};
 					add_move(list, m);
@@ -74,7 +76,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 	// En Passant
 	if (pos->en_passant_target != NO_SQUARE) {
 		int epf = file_of(pos->en_passant_target), epr = rank_of(pos->en_passant_target);
-		if (epr == rank + 1 && (epf == file - 1 || epf == file + 1)) {
+		if (epr == rank && (epf == file - 1 || epf == file + 1)) {
 			Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
 			add_move(list, m);
 		}
@@ -90,17 +92,20 @@ static void gen_knight(const Position *pos, Square sq, MoveList *list) {
 	for (int i = 0; i < 8; i++) {
 		int df = KN[i][0];
 		int dr= KN[i][1];
-		Square sq_to = SQ(file + df, rank + dr);
-		if (in_board(file + df, rank + dr)) {
-			Piece target = at(pos, sq_to);
-			if (target == NO_PIECE || piece_color(target) != c) {
-				Move m = {sq, sq_to, NORMAL, NO_PIECE};
-				add_move(list, m);
-			}
-			else if (target != NO_PIECE && piece_color(target) != c) {
-				Move m = {sq, sq_to, CAPTURE, NO_PIECE};
-				add_move(list, m);
-			}
+		if (!in_board(file + df, rank + dr)) continue;
+
+		int nf = file + df;
+		int nr = rank + dr;
+		Square sq_to = SQ(nf, nr);
+		Piece target = at(pos, sq_to);
+
+		if (target == NO_PIECE) {
+			Move m = (Move){sq, sq_to, NORMAL, NO_PIECE};
+			add_move(list, m);
+		}
+		else if (target != NO_PIECE && piece_color(target) != c) {
+			Move m = (Move){sq, sq_to, CAPTURE, NO_PIECE};
+			add_move(list, m);
 		}
 	}
 }
@@ -120,11 +125,11 @@ static void gen_slider(const Position *pos, Square sq, MoveList *list, const int
 			Square sq_to = SQ(f, r);
 			Piece target = at(pos, sq_to);
 			if (target == NO_PIECE) {
-				Move m = {sq, sq_to, NORMAL, NO_PIECE};
+				Move m = (Move){sq, sq_to, NORMAL, NO_PIECE};
 				add_move(list, m);
 			} else {
 				if (piece_color(target) != c) {
-					Move m = {sq, sq_to, CAPTURE, NO_PIECE};
+					Move m = (Move){sq, sq_to, CAPTURE, NO_PIECE};
 					add_move(list, m);
 				}
 				break; // Stop sliding on capture or blocked

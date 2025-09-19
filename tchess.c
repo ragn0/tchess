@@ -40,14 +40,14 @@ void init_position(Position *pos){
 // Auxiliary function to convert square index to string (e.g., 0 -> "a1")
 char* square_to_string(Square square) {
 	char *buffer = malloc(3 * sizeof(char));
-	if (square >= NUM_SQUARES) {
-		strcpy(buffer, "??");
-		return 0;
+	if (square < 0 || square >= NUM_SQUARES) {
+		strcpy(buffer, "??\0");
+		return buffer;
 	}
 	int file = file_of(square);
 	int rank = rank_of(square);
-	buffer[0] = 'a' + file;
-	buffer[1] = '1' + rank;
+	buffer[0] = (char)('a' + file);
+	buffer[1] = (char)('1' + rank);
 	buffer[2] = '\0';
 	return buffer;
 }
@@ -85,7 +85,7 @@ void print_board(const Position *pos) {
     printf("\n");
 
     printf("  +---+---+---+---+---+---+---+---+\n");
-	if (!flipped) {
+	if (flipped) {
     for (int row = 0; row < 8; row++) {
         int rank_label = !flipped ? (8 - row) : (1 + row);
         printf("%d |", rank_label);
@@ -213,7 +213,6 @@ int make_move(Position *pos, const Move *move) {
         pos->board[taken_sq] = NO_PIECE;
         cap_sq = taken_sq;
 
-        // azzera halfmove clock: pedone ha mosso + c'è cattura
         pos->halfmove_clock = 0;
     }
     // 3) PROMOTION 
@@ -236,7 +235,7 @@ int make_move(Position *pos, const Move *move) {
         if (piece_type(moving) == PAWN || captured != NO_PIECE)
             pos->halfmove_clock = 0;
 
-        // Imposta EP target se pedone fa doppio passo
+		// Set en passant target if a pawn moved two squares
         if (piece_type(moving) == PAWN) {
             int dr = rank_of(to) - rank_of(from);
             if (dr == 2) {
