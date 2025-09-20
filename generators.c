@@ -134,6 +134,8 @@ static void gen_slider(const Position *pos, Square sq, MoveList *list, const int
 				}
 				break; // Stop sliding on capture or blocked
 			}
+			f += df;
+			r += dr;
 		}
 	
 	}
@@ -196,7 +198,6 @@ static void gen_castling(const Position *pos, MoveList *list) {
 // Based on the piece on the given square, we will call the appropriate generator
 static void gen_piece_moves(const Position *pos, Square sq, MoveList *list) {
 	Piece p = at(pos, sq);
-	if (p == NO_PIECE) return;
 	switch (piece_type(p)) {
 		case PAWN:
 			gen_pawn(pos, sq, list);

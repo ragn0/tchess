@@ -87,7 +87,7 @@ void print_board(const Position *pos) {
     printf("  +---+---+---+---+---+---+---+---+\n");
 	if (flipped) {
     for (int row = 0; row < 8; row++) {
-        int rank_label = !flipped ? (8 - row) : (1 + row);
+        int rank_label = (1 + row);
         printf("%d |", rank_label);
 
         for (int col = 0; col < 8; col++) {
@@ -102,10 +102,10 @@ void print_board(const Position *pos) {
 	}
 	else {
 		for (int row = 7; row >= 0; row--) {
-			int rank_label = !flipped ? (8 - row) : (1 + row);
+			int rank_label = (1 + row);
 			printf("%d |", rank_label);
 
-			for (int col = 7; col >= 0; col--) {
+			for (int col = 0; col < 8; col++) {
 				// Assuming 0,0 is a8, 7,7 is h1
 				Piece p = pos->board[SQ(col, row)];
 				char c  = piece_to_char(p);
