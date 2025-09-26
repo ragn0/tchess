@@ -90,7 +90,7 @@ void print_board(const Position *pos) {
         int rank_label = (1 + row);
         printf("%d |", rank_label);
 
-        for (int col = 0; col < 8; col++) {
+        for (int col = 7; col >= 0; col--) {
 			// Assuming 0,0 is a8, 7,7 is h1
             Piece p = pos->board[SQ(col, row)];
             char c  = piece_to_char(p);
@@ -218,7 +218,7 @@ int make_move(Position *pos, const Move *move) {
     // 3) PROMOTION 
     else if (move->type == PROMOTION) {
         if (piece_type(moving) != PAWN) return 0;
-        captured = pos->board[to]; // se c'è un pezzo è cattura regolare
+        captured = pos->board[to]; // if a piece is on 'to', it's a capture 
         pos->board[to]   = promo_to_piece(c_us, move->promotionPiece);
         pos->board[from] = NO_PIECE;
  
@@ -238,7 +238,7 @@ int make_move(Position *pos, const Move *move) {
 		// Set en passant target if a pawn moved two squares
         if (piece_type(moving) == PAWN) {
             int dr = rank_of(to) - rank_of(from);
-            if (dr == 2) {
+            if (dr == 2 || dr == -2) {
                 int mid_r = (rank_of(from) + rank_of(to)) / 2;
                 pos->en_passant_target = SQ(file_of(from), mid_r);
             }

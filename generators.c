@@ -76,7 +76,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 	// En Passant
 	if (pos->en_passant_target != NO_SQUARE) {
 		int epf = file_of(pos->en_passant_target), epr = rank_of(pos->en_passant_target);
-		if (epr == rank && (epf == file - 1 || epf == file + 1)) {
+		if ((epr == rank+1 || epr == rank-1) && (epf == file - 1 || epf == file + 1)) {
 			Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
 			add_move(list, m);
 		}
