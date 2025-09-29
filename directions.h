@@ -1,6 +1,8 @@
 #ifndef DIRECTIONS_H
 #define DIRECTIONS_H
 
+enum {S = +8, N = -8, E = +1, W = -1, NE = -7, NW = -9, SE = +9, SW = +7};
+
 static const int KN[8][2] = {
     {+1,+2},{+2,+1},{+2,-1},{+1,-2},{-1,-2},{-2,-1},{-2,+1},{-1,+2}
 };

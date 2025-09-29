@@ -10,6 +10,7 @@
 // static void gen_king(const Position* pos, Square s, MoveList* ml);
 // static void gen_castling(const Position* pos, MoveList* ml);
 // static void gen_piece_moves(const Position* pos, Square s, MoveList* ml);
+// static bool caste_path_safe(const Position* pos, Square king_from, Square king_to, Square rook_from, Square rook_to);
 
 // Public move generation functions
 void generate_pseudo_legal_moves(const Position* pos, MoveList* ml); // Generate all pseudo-legal moves for the current position

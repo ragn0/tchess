@@ -2,6 +2,7 @@
 #include "tchess.h"
 #include "generators.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // -- GENERATOR MOVES --
 
@@ -234,4 +235,69 @@ void generate_pseudo_legal_moves(const Position *pos, MoveList *ml) {
 		}
 	}
 	gen_castling(pos, ml);
+}
+
+// Check if the squares the king passes through during castling are safe
+static bool castle_path_safe(const Position* pos, Color side, bool kingside) {
+    if (side == WHITE) {
+        if (is_square_attacked(pos, E1, BLACK)) return false;
+        if (kingside) {
+            if (is_square_attacked(pos, F1, BLACK)) return false;
+            if (is_square_attacked(pos, G1, BLACK)) return false;
+        } else {
+            if (is_square_attacked(pos, D1, BLACK)) return false;
+            if (is_square_attacked(pos, C1, BLACK)) return false;
+        }
+    } else {
+        if (is_square_attacked(pos, E8, WHITE)) return false;
+        if (kingside) {
+            if (is_square_attacked(pos, F8, WHITE)) return false;
+            if (is_square_attacked(pos, G8, WHITE)) return false;
+        } else {
+            if (is_square_attacked(pos, D8, WHITE)) return false;
+            if (is_square_attacked(pos, C8, WHITE)) return false;
+        }
+    }
+    return true;
+}
+
+void generate_legal(const Position* pos, MoveList* ml) {
+	MoveList *pseudo_legal = malloc(sizeof(MoveList));
+	generate_pseudo_legal_moves(pos, pseudo_legal);
+	ml->count = 0;
+
+	Color us = pos->side_to_move;
+	Square king_sq = (us == WHITE) ? E1 : E8;
+	
+	for (int i = 0; i < pseudo_legal->count; i++) {
+		Move m = pseudo_legal->list[i];
+		Position *new_pos = malloc(sizeof(Position));
+		*new_pos = *pos; // Copy current position
+		if (make_move(new_pos, &m)) {
+		// Find king's square
+			for (int sq = 0; sq < NUM_SQUARES; sq++) {
+				Piece p = at(pos, sq);
+				if (piece_type(p) == KING && piece_color(p) == us) {
+					king_sq = sq;
+					break;
+				}
+			}
+			// Check if our king is in check in the new position
+			if (!is_square_attacked(new_pos, king_sq, !us)) {
+				// If the move is castling, ensure the path is safe
+				if (m.type == CASTLING_KINGSIDE) {
+					if (castle_path_safe(pos, us, true)) {
+						add_move(ml, m);
+					}
+				} else if (m.type == CASTLING_QUEENSIDE) {
+					if (castle_path_safe(pos, us, false)) {
+						add_move(ml, m);
+					}
+				} else {
+					add_move(ml, m);
+				}
+			}
+		}
+
+	}
 }

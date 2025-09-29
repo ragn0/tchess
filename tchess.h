@@ -107,6 +107,7 @@ static inline PieceType piece_type(Piece piece) {
 static inline int file_of(Square s){ return s % NUM_FILES; } // 0..7
 static inline int rank_of(Square s){ return -((s - file_of(s)) / NUM_FILES) + 7; } // 0..7
 static inline bool in_board(int f, int r){ return (f >= 0 ) && (f < NUM_FILES) && (r >= 0) && (r < NUM_RANKS); } // true if on board
+static inline bool in_board_sq(Square sq){ return (file_of(sq) >= 0 ) && (file_of(sq) < NUM_FILES) && (rank_of(sq) >= 0) && (rank_of(sq) < NUM_RANKS); } // true if on board
 static inline Square sq_of(int f,int r){ return (Square)(r*NUM_FILES + f); }
 static inline Piece at(const Position* pos, Square s){ return pos->board[s]; }
 
@@ -137,5 +138,7 @@ void print_board(const Position *pos); // Print the board with pieces
 
 Move* parse_move(const char *move_str); // Parse a move from a string
 int make_move(Position *pos, const Move *move); // Make a move on the board
+
+bool is_square_attacked(const Position *pos, Square square, Color attacker);
 
 #endif // TCHESS_H

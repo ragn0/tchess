@@ -1,4 +1,5 @@
 #include "tchess.h"
+#include "directions.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -277,4 +278,71 @@ int make_move(Position *pos, const Move *move) {
     return 1;
 }
 
+bool is_square_attacked(const Position *pos, Square sq, Color attacker) {
+	// 1) Pawn attacks
+	if (attacker == WHITE) {
+		Square nw_p = sq + NW;
+		Square ne_p = sq + NE;
+		if (in_board_sq(nw_p) && pos->board[nw_p] == WHITE_PAWN) return true;
+		if (in_board_sq(ne_p) && pos->board[ne_p] == WHITE_PAWN) return true;
+	}
+	else {
+		Square sw_p = sq + SW;
+		Square se_p = sq + SE;
+		if (in_board_sq(sw_p) && pos->board[sw_p] == BLACK_PAWN) return true;
+		if (in_board_sq(se_p) && pos->board[se_p] == BLACK_PAWN) return true;
+	}
+	// 2) Knight attacks
+	for (int i = 0; i < 8; i++) {
+		int k_f = file_of(sq) + KN[i][0];
+		int k_r = rank_of(sq) + KN[i][1];
+		Square k_sq = SQ(k_f, k_r);
+		if (in_board_sq(k_sq)) {
+			Piece p = pos->board[k_sq];
+			if ((attacker == WHITE && p == WHITE_KNIGHT) ||
+				(attacker == BLACK && p == BLACK_KNIGHT)) {
+				return true;
+			}
+		}
+	}
+	// 3) Bishop/Queen/Rook attacks
+	for (int dir = 0; dir < 8; dir++) {
+		int new_f = file_of(sq);
+		int new_r = rank_of(sq);
+		while (true) {
+			new_f += QDIR[dir][0];
+			new_r += QDIR[dir][1];
+			Square new_sq = SQ(new_f, new_r);
+			if (!in_board_sq(new_sq)) break;
+			Piece p = pos->board[new_sq];
+			if (p != NO_PIECE) {
+				if (piece_color(p) == attacker) {
+					if (piece_type(p) == QUEEN) return true;
+					if ((dir < 4) && piece_type(p) == ROOK) return true; // Rook directions
+					if ((dir >= 4) && piece_type(p) == BISHOP) return true; // Bishop directions
+				}
+				break; // Blocked by any piece
+			}
+		}
+	}
+	// 4) King attacks
+	for (int df = -1; df <= 1; df++) {
+		for (int dr = -1; dr <= 1; dr++) {
+			if (df == 0 && dr == 0) continue;
+			int k_f = file_of(sq) + df;
+			int k_r = rank_of(sq) + dr;
+			Square k_sq = SQ(k_f, k_r);
+			if (in_board_sq(k_sq)) {
+				Piece p = pos->board[k_sq];
+				if ((attacker == WHITE && p == WHITE_KING) ||
+					(attacker == BLACK && p == BLACK_KING)) {
+					return true;
+				}
+			}
+		}
+	}
+	
+
+	return false;
+}
 
