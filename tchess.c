@@ -205,9 +205,10 @@ int make_move(Position *pos, const Move *move) {
     // 2) EN PASSANT 
     else if (move->type == EN_PASSANT) {
         if (piece_type(moving) != PAWN) return 0; // Must be a pawn 
-        Square taken_sq = SQ(file_of(to), rank_of(to) - 1); // pedone catturato NON è su 'to'
+		Square ep_target = pos->en_passant_target;
+        Square taken_sq = c_us == WHITE ? ep_target + S : ep_target + N; // pedone catturato NON è su 'to'
         captured = pos->board[taken_sq];
-        if (captured != WHITE_PAWN || captured != BLACK_PAWN) return 0; 
+        if (captured != WHITE_PAWN && captured != BLACK_PAWN) return 0; 
 
         pos->board[to]   = moving;
         pos->board[from] = NO_PIECE; 
@@ -274,7 +275,7 @@ int make_move(Position *pos, const Move *move) {
     pos->side_to_move = c_them;
 
     if (c_them == WHITE) pos->fullmove_number++;
-
+	printf("En passant target: %s\n", square_to_string(pos->en_passant_target));
     return 1;
 }
 

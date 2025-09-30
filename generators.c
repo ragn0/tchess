@@ -77,9 +77,17 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 	// En Passant
 	if (pos->en_passant_target != NO_SQUARE) {
 		int epf = file_of(pos->en_passant_target), epr = rank_of(pos->en_passant_target);
-		if ((epr == rank+1 || epr == rank-1) && (epf == file - 1 || epf == file + 1)) {
-			Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
-			add_move(list, m);
+		if (c == WHITE){
+			if ((epr == rank+1) && (epf == file - 1 || epf == file + 1)) {
+				Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
+				add_move(list, m);
+			}
+		}
+		else {
+			if ((epr == rank-1) && (epf == file - 1 || epf == file + 1)) {
+				Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
+				add_move(list, m);
+			}
 		}
 	}
 }
@@ -156,10 +164,14 @@ static void gen_king(const Position *pos, Square sq, MoveList *list) {
 			if (in_board(f, r)) {
 				Square sq_to = SQ(f, r);
 				Piece target = at(pos, sq_to);
-				if (target == NO_PIECE) 
-					add_move(list, (Move){sq, sq_to, NORMAL, NO_PIECE});
-				else if (piece_color(target) != c)
-					add_move(list, (Move){sq, sq_to, CAPTURE, NO_PIECE});
+				if (target == NO_PIECE) {
+					Move m = (Move){sq, sq_to, NORMAL, NO_PIECE};
+					add_move(list, m);
+				}
+				else if (piece_color(target) != c) {
+					Move m = (Move){sq, sq_to, CAPTURE, NO_PIECE};
+					add_move(list, m);
+				}
 			}
 		}
 
@@ -217,7 +229,6 @@ static void gen_piece_moves(const Position *pos, Square sq, MoveList *list) {
 			break;
 		case KING:
 			gen_king(pos, sq, list);
-			gen_castling(pos, list);
 			break;
 		default:
 			break;
@@ -272,32 +283,37 @@ void generate_legal(const Position* pos, MoveList* ml) {
 	for (int i = 0; i < pseudo_legal->count; i++) {
 		Move m = pseudo_legal->list[i];
 		Position *new_pos = malloc(sizeof(Position));
-		*new_pos = *pos; // Copy current position
-		if (make_move(new_pos, &m)) {
 		// Find king's square
-			for (int sq = 0; sq < NUM_SQUARES; sq++) {
-				Piece p = at(pos, sq);
-				if (piece_type(p) == KING && piece_color(p) == us) {
-					king_sq = sq;
-					break;
-				}
-			}
-			// Check if our king is in check in the new position
-			if (!is_square_attacked(new_pos, king_sq, !us)) {
-				// If the move is castling, ensure the path is safe
-				if (m.type == CASTLING_KINGSIDE) {
-					if (castle_path_safe(pos, us, true)) {
-						add_move(ml, m);
-					}
-				} else if (m.type == CASTLING_QUEENSIDE) {
-					if (castle_path_safe(pos, us, false)) {
-						add_move(ml, m);
-					}
-				} else {
-					add_move(ml, m);
-				}
+		if (m.from == king_sq) {
+			king_sq = m.to;
+		} else {
+		for (int sq = 0; sq < NUM_SQUARES; sq++) {
+			Piece p = at(pos, sq);
+			if (piece_type(p) == KING && piece_color(p) == us) {
+				king_sq = sq;
+				break;
 			}
 		}
-
+	}
+		*new_pos = *pos; // Copy current position
+		printf("En passant target after move: %s\n", square_to_string(pos->en_passant_target));
+		make_move(new_pos, &m); // Make the move	
+		// Check if our king is in check in the new position
+		if (!is_square_attacked(new_pos, king_sq, !us)) {
+			// If the move is castling, ensure the path is safe
+			if (m.type == CASTLING_KINGSIDE) {
+				if (castle_path_safe(pos, us, true)) {
+					add_move(ml, m);
+				}
+			} else if (m.type == CASTLING_QUEENSIDE) {
+				if (castle_path_safe(pos, us, false)) {
+					add_move(ml, m);
+				}
+			} else {
+				add_move(ml, m);
+			}
+		}
+		free(new_pos);
+		
 	}
 }

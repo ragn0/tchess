@@ -94,12 +94,16 @@ static inline Color piece_color(Piece piece) {
 	if (piece == NO_PIECE) {
 		return NO_COLOR;
 	}
+	
 	return (piece >= BLACK_PAWN) ? BLACK : WHITE;
 }
 // Get piece type
 static inline PieceType piece_type(Piece piece) {
 	if (piece == NO_PIECE) {
 		return NO_PIECE_TYPE;
+	}
+	else if (piece == WHITE_KING || piece == BLACK_KING) {
+		return KING;
 	}
 	return (PieceType)(piece % 6);
 }
