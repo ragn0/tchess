@@ -144,5 +144,6 @@ Move* parse_move(const char *move_str); // Parse a move from a string
 int make_move(Position *pos, const Move *move); // Make a move on the board
 
 bool is_square_attacked(const Position *pos, Square square, Color attacker);
+Square find_king(const Position *pos, Color color);
 
 #endif // TCHESS_H

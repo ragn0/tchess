@@ -22,7 +22,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 			// Promotions
 			char promos[] = {'q', 'r', 'b', 'n'};
 			for (int i = 0; i < 4; i++) {
-				Move m = {sq, to, PROMOTION, promos[i]};
+				Move m = (Move){sq, to, PROMOTION, promos[i]};
 				add_move(list, m);
 			}
 		} else {
@@ -33,7 +33,7 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 				int r2 = rank + 2 * ((c == WHITE) ? 1 : -1);
 				Square to2 = SQ(file, r2);
 				if (at(pos, to2) == NO_PIECE) {
-					Move m2 = {sq, to2, NORMAL, NO_PIECE};
+					Move m2 = (Move){sq, to2, NORMAL, NO_PIECE};
 					add_move(list, m2);
 				}
 			}
@@ -51,11 +51,11 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 			// Capture left, check for promotion
 			if (r1 == 7 || r1 == 0) {
 				for (int i = 0; i < 4; i++) {
-					Move m = {sq, cap_left, PROMOTION, promos[i]};
+					Move m = (Move){sq, cap_left, PROMOTION, promos[i]};
 					add_move(list, m);
 				}
 			} else {
-				Move m = {sq, cap_left, NORMAL, NO_PIECE};
+				Move m = (Move){sq, cap_left, NORMAL, NO_PIECE};
 				add_move(list, m);
 			}
 		}
@@ -63,11 +63,11 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 			// Capture right, check for promotion
 			if (r1 == 7 || r1 == 0) {
 				for (int i = 0; i < 4; i++) {
-					Move m = {sq, cap_left, PROMOTION, promos[i]};
+					Move m = (Move){sq, cap_right, PROMOTION, promos[i]};
 					add_move(list, m);
 				}
 			} else {
-				Move m = {sq, cap_left, NORMAL, NO_PIECE};
+				Move m = (Move){sq, cap_right, NORMAL, NO_PIECE};
 				add_move(list, m);
 			}
 		}
@@ -79,13 +79,13 @@ static void gen_pawn(const Position *pos, Square sq, MoveList *list) {
 		int epf = file_of(pos->en_passant_target), epr = rank_of(pos->en_passant_target);
 		if (c == WHITE){
 			if ((epr == rank+1) && (epf == file - 1 || epf == file + 1)) {
-				Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
+				Move m = (Move){sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
 				add_move(list, m);
 			}
 		}
 		else {
 			if ((epr == rank-1) && (epf == file - 1 || epf == file + 1)) {
-				Move m = {sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
+				Move m = (Move){sq, pos->en_passant_target, EN_PASSANT, NO_PIECE};
 				add_move(list, m);
 			}
 		}
@@ -278,26 +278,18 @@ void generate_legal(const Position* pos, MoveList* ml) {
 	ml->count = 0;
 
 	Color us = pos->side_to_move;
-	Square king_sq = (us == WHITE) ? E1 : E8;
+	Square king_sq;
 	
 	for (int i = 0; i < pseudo_legal->count; i++) {
 		Move m = pseudo_legal->list[i];
 		Position *new_pos = malloc(sizeof(Position));
-		// Find king's square
-		if (m.from == king_sq) {
-			king_sq = m.to;
-		} else {
-		for (int sq = 0; sq < NUM_SQUARES; sq++) {
-			Piece p = at(pos, sq);
-			if (piece_type(p) == KING && piece_color(p) == us) {
-				king_sq = sq;
-				break;
-			}
-		}
-	}
+				
 		*new_pos = *pos; // Copy current position
-		printf("En passant target after move: %s\n", square_to_string(pos->en_passant_target));
 		make_move(new_pos, &m); // Make the move	
+								
+		// Get king square
+		king_sq = find_king(new_pos, us);
+
 		// Check if our king is in check in the new position
 		if (!is_square_attacked(new_pos, king_sq, !us)) {
 			// If the move is castling, ensure the path is safe

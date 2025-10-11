@@ -44,7 +44,7 @@ int main(){
 				}
 			}
 		}
-		
+		system("clear"); // Clear the console (works on Unix-like systems)
 
 	}
 }

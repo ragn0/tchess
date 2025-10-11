@@ -163,8 +163,9 @@ int make_move(Position *pos, const Move *move) {
     Color c_us = pos->side_to_move;
     Color c_them = !c_us;
 	if (piece_color(moving) != c_us) return 0;
-    // default: no en passant target 
-    pos->en_passant_target = NO_SQUARE;
+	
+	// Save previous en passant target to check at the end if it changed
+	Square prev_ep = pos->en_passant_target;
 
     // halfmove clock: increments by default, reset to 0 if pawn move or capture 
     pos->halfmove_clock++;
@@ -204,13 +205,13 @@ int make_move(Position *pos, const Move *move) {
     }
     // 2) EN PASSANT 
     else if (move->type == EN_PASSANT) {
-        if (piece_type(moving) != PAWN) return 0; // Must be a pawn 
+        if (piece_type(moving) != PAWN) return 0; 
 		Square ep_target = pos->en_passant_target;
-        Square taken_sq = c_us == WHITE ? ep_target + S : ep_target + N; // pedone catturato NON è su 'to'
+        Square taken_sq = c_us == WHITE ? ep_target + S : ep_target + N; // Square of the pawn being captured 
         captured = pos->board[taken_sq];
         if (captured != WHITE_PAWN && captured != BLACK_PAWN) return 0; 
 
-        pos->board[to]   = moving;
+        pos->board[ep_target] = moving;
         pos->board[from] = NO_PIECE; 
         pos->board[taken_sq] = NO_PIECE;
         cap_sq = taken_sq;
@@ -271,11 +272,15 @@ int make_move(Position *pos, const Move *move) {
         else if (cap_sq == A8) pos->castling_rights &= ~BLACK_QUEEN_SIDE_CASTLING;
         else if (cap_sq == H8) pos->castling_rights &= ~BLACK_KING_SIDE_CASTLING;
     }
-
+   	// If en passant target changed, reset it (it lasts only one move)
+	if (pos->en_passant_target != prev_ep) {
+	// It was just set in this move, so do nothing
+	} else {
+		pos->en_passant_target = NO_SQUARE;
+	}
     pos->side_to_move = c_them;
 
     if (c_them == WHITE) pos->fullmove_number++;
-	printf("En passant target: %s\n", square_to_string(pos->en_passant_target));
     return 1;
 }
 
@@ -347,3 +352,14 @@ bool is_square_attacked(const Position *pos, Square sq, Color attacker) {
 	return false;
 }
 
+Square find_king(const Position *pos, Color c) {
+	Piece king = (c == WHITE) ? WHITE_KING : BLACK_KING;
+	Square ksq = NO_SQUARE;
+	for (Square sq = 0; sq < NUM_SQUARES; sq++) {
+		if (pos->board[sq] == king) {
+			ksq = sq;
+			break;
+		}
+	}
+	return ksq; // Null return should never happen in a valid position
+}	
